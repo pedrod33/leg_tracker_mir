@@ -132,6 +132,7 @@ public:
   * @brief Constructor
   * @param scan Scan to be processed
   */
+  ScanProcessor(const sensor_msgs::LaserScan& scan, const int nvert, const std::vector<double> vertsx, std::vector<double> vertsy);
   ScanProcessor(const sensor_msgs::LaserScan& scan);
 
   /**
@@ -143,7 +144,7 @@ public:
   * @brief Remove and delete all references to scan clusters less than a minimum size
   * @param num Minimum number of points in cluster
   */
-  void removeLessThan(uint32_t num);
+  std::vector<SampleSet*> removeLessThan(uint32_t num);
 
   /**
   * @brief Split scan into clusters

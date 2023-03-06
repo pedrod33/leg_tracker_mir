@@ -293,7 +293,7 @@ std::vector<float> ClusterFeatures::calcClusterFeatures(const laser_processor::S
   std::vector<float> features;
 
   // features from "Using Boosted Features for the Detection of People in 2D Range Data"
-  features.push_back(num_points);           
+  features.push_back(num_points);
   features.push_back(std);                  
   features.push_back(avg_median_dev);      
   // features.push_back(prev_jump); // not included as we want to learn features independant of the background

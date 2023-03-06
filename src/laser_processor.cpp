@@ -79,6 +79,39 @@ tf::Point SampleSet::getPosition()
 }
 
 
+ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan, const int nvert, const std::vector<double> vertsx, std::vector<double> vertsy ) 
+{
+  scan_ = scan;
+
+  SampleSet* cluster = new SampleSet;
+
+  for (int i = 0; i < scan.ranges.size(); i++)
+  {
+    Sample* s = Sample::Extract(i, scan);
+    int l, j, c = 0;
+    for (l = 0, j = nvert-1; l < nvert; j = l++) {
+      if ( ((vertsy[l]>s->x) != (vertsy[j]>s->y)) &&
+      (s->x < (vertsx[j]-vertsx[l]) * (s->y-vertsy[l]) / (vertsy[j]-vertsy[l]) + vertsx[l]) )
+          c = !c;
+    }
+    if(c)
+    {
+      printf("\nTrue for point(%.2f,%.2f)",s->x,s->y);
+    }
+    else{
+      printf("\nFalse for(%.2f,%.2f)",s->x,s->y);
+    }
+    
+
+
+    if (s != NULL && c)
+      cluster->insert(s);
+  }
+
+  clusters_.push_back(cluster);
+  printf("%ld",clusters_.size());
+}
+
 ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan) 
 {
   scan_ = scan;
@@ -94,6 +127,7 @@ ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan)
   }
 
   clusters_.push_back(cluster);
+  printf("%ld",clusters_.size());
 }
 
 ScanProcessor::~ScanProcessor()
@@ -102,21 +136,24 @@ ScanProcessor::~ScanProcessor()
     delete (*c);
 }
 
-void ScanProcessor::removeLessThan(uint32_t num)
+std::vector<SampleSet*> ScanProcessor::removeLessThan(uint32_t num)
 {
+  std::vector<SampleSet*> small_clusters;
   std::list<SampleSet*>::iterator c_iter = clusters_.begin();
   while (c_iter != clusters_.end())
   {
     if ( (*c_iter)->size() < num )
     {
-      delete (*c_iter);
+      small_clusters.push_back(*c_iter);
+      // delete (*c_iter);
       clusters_.erase(c_iter++);
-    } 
+    }
     else 
     {
       ++c_iter;
     }
   }
+  return small_clusters;
 }
 
 
@@ -142,12 +179,14 @@ void ScanProcessor::splitConnected(float thresh)
       std::list<Sample*>::iterator s_q = sample_queue.begin();
       while (s_q != sample_queue.end())
       {
-        int expand = (int)(asin( thresh / (*s_q)->range ) / scan_.angle_increment);
+        int expand = (int)(asin( thresh / (*s_q)->range ) / std::fabs(scan_.angle_increment));
 
         SampleSet::iterator s_rest = (*c_iter)->begin();
 
+        
         while ( (s_rest != (*c_iter)->end() and (*s_rest)->index < (*s_q)->index + expand ) )
         {
+
           if (sqrt( pow( (*s_q)->x - (*s_rest)->x, 2.0f) + pow( (*s_q)->y - (*s_rest)->y, 2.0f)) < thresh)
           {
             sample_queue.push_back(*s_rest);
@@ -180,4 +219,24 @@ void ScanProcessor::splitConnected(float thresh)
   // Insert our temporary clusters list back into the de facto list
   clusters_.insert(clusters_.begin(), tmp_clusters.begin(), tmp_clusters.end());
 }
+
+
+int pnpoly(int nvert, std::vector<double> vertsx, std::vector<double> vertsy, float testx, float testy)
+{
+  int i, j, c = 0;
+  for (i = 0, j = nvert-1; i < nvert; j = i++) {
+    if ( ((vertsy[i]>testy) != (vertsy[j]>testy)) &&
+    (testx < (vertsx[j]-vertsx[i]) * (testy-vertsy[i]) / (vertsy[j]-vertsy[i]) + vertsx[i]) )
+        c = !c;
+  }
+  if(c)
+  {
+    printf("\nTrue for point(%.2f,%.2f)",testx,testy);
+  }
+  else{
+    printf("\nFalse for(%.2f,%.2f)",testx,testy);
+  }
+  return c;
+}
+
 }; // namespace laser_processor 

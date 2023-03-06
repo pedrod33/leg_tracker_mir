@@ -316,6 +316,7 @@ private:
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "detect_leg_clusters");
+  printf("created dlc");
   DetectLegClusters dlc;
   ros::spin();
   return 0;

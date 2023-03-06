@@ -52,30 +52,47 @@ public:
       ROS_ERROR("Couldn't get scan_topic from ros param server");
     if (!nh_private.getParam("laser_frame", laser_frame_))
       ROS_ERROR("Couldn't get laser_frame from ros param server");
+    if (!nh_private.getParam("tf_data", tf_data_))
+      ROS_ERROR("Couldn't get tf_data from ros param server");
+
+      
 
     // Optional parameters (i.e., params with defaults)
     nh_private.param("cluster_dist_euclid", cluster_dist_euclid_, 0.13);
     nh_private.param("min_points_per_cluster", min_points_per_cluster_, 3);        
-    
+    nh_private.param("max_points_per_cluster", max_points_per_cluster_, 50);        
+
     // Optional parameters - either the x-y coordinates of a bounding box can be specified 
     // or the min/max angle and length for an arc
+    
+    if(nh_private.getParam("polygon_x", pol_x_) and
+      nh_private.getParam("polygon_y", pol_y_)) 
+    {
+      bounding_type = 2;
+      ROS_INFO("---------USING POLYGON------------");
+      if(pol_x_.size()!=pol_y_.size() or pol_x_.size()<=3){
+        ROS_ERROR("Polygon does not have same amount of x and y coordinates");
+      }
+    }
+    else
+    {
+      bounding_type = 1;
+    }
     if (!nh_private.getParam("x_min", x_min_) or
         !nh_private.getParam("x_max", x_max_) or
         !nh_private.getParam("y_min", y_min_) or
         !nh_private.getParam("y_max", y_max_))                        
     {
-      ROS_INFO("Couldn't get bounding box for positive clusters. Assuming you've specified a min/max scan angle and a max distance instead.");
-      use_bounding_box_ = false;
-    }
-    else
-    {
-      use_bounding_box_ = true;
+      ROS_INFO("Couldn't get bounding box for positive clusters. Assuming you've specified a min/max scan angle and a max distance or a polygon instead.");
+      if(bounding_type==1){
+        bounding_type = 0;
+      }
     }
     if (!nh_private.getParam("min_angle", min_angle_) or
         !nh_private.getParam("max_angle", max_angle_) or
         !nh_private.getParam("max_dist", max_dist_))                       
     {
-      if (use_bounding_box_)
+      if (bounding_type)
       {
         ROS_INFO("Couldn't get min/max scan angle for positive clusters. Assuming you've specified a bounding box instead.");
       }
@@ -89,7 +106,9 @@ public:
     printf("\nROS parameters: \n");
     printf("cluster_dist_euclid:%.2fm \n", cluster_dist_euclid_);
     printf("min_points_per_cluster:%i \n", min_points_per_cluster_);
-    printf("\n");
+    printf("max_points_per_cluster:%i \n", max_points_per_cluster_);
+
+    printf("--------------\n");
   }
 
   /**
@@ -97,6 +116,7 @@ public:
   */
   void extract()
   {
+    printf("TRIES TO EXTRACT");
     // Open rosbag we'll be saving to
     rosbag::Bag save_bag;
     save_bag.open(save_bag_file_.c_str(), rosbag::bagmode::Write);
@@ -107,82 +127,141 @@ public:
     
     // Iterate through all scan messages in the loaded rosbag
     std::vector<std::string> topics;
+
     topics.push_back(std::string(scan_topic_));
-    rosbag::View view(load_bag, rosbag::TopicQuery(topics)); 
+    rosbag::View view(load_bag, rosbag::TopicQuery(topics));
     BOOST_FOREACH(rosbag::MessageInstance const m, view)
     {
-      sensor_msgs::LaserScan::ConstPtr scan = m.instantiate<sensor_msgs::LaserScan>();
-      if (scan != NULL)
+      if(m.getDataType()=="sensor_msgs/LaserScan")
       {
-        // Processes scan
-        laser_processor::ScanProcessor processor(*scan);
-        processor.splitConnected(cluster_dist_euclid_);
-        processor.removeLessThan(min_points_per_cluster_);
 
-        geometry_msgs::PoseArray leg_cluster_positions;
-        leg_cluster_positions.header.frame_id = laser_frame_;
+        sensor_msgs::LaserScan::ConstPtr scan = m.instantiate<sensor_msgs::LaserScan>();
+        if (scan != NULL)
+        {          
+          // Positive scan points
+          laser_processor::ScanProcessor pos_processor(*scan,1,pol_x_,pol_y_);          
 
-        for (std::list<laser_processor::SampleSet*>::iterator i = processor.getClusters().begin();
-          i != processor.getClusters().end();
-          ++i)
-        {
-          // Only use scan clusters that are in the specified positive cluster area
-          tf::Point cluster_position = (*i)->getPosition();
+          pos_processor.splitConnected(cluster_dist_euclid_);
+          printf("Number of clusters %ld.\n",pos_processor.getClusters().size());
 
-          double x_pos = cluster_position[0];
-          double y_pos = cluster_position[1];
-          double angle = atan2(y_pos,x_pos) * 180 / PI;
-          double dist_abs = sqrt(x_pos*x_pos + y_pos*y_pos);
+          auto small_clusters = pos_processor.removeLessThan(min_points_per_cluster_);
+          printf("Processor size %ld.\n",pos_processor.getClusters().size());
 
-          bool in_bounding_box = use_bounding_box_ and x_pos > x_min_ and x_pos < x_max_ and y_pos > y_min_ and y_pos < y_max_;
-          bool in_arc = !use_bounding_box_ and angle > min_angle_ and angle < max_angle_ and dist_abs < max_dist_;
-          if (in_bounding_box or in_arc) 
-          {          
-            geometry_msgs::Pose new_leg_cluster_position;
-            new_leg_cluster_position.position.x = cluster_position[0];
-            new_leg_cluster_position.position.y = cluster_position[1];
-            leg_cluster_positions.poses.push_back(new_leg_cluster_position);
-          }
-        }
-        if (!leg_cluster_positions.poses.empty())  // at least one leg has been found in current scan
-        {
-          // Save position of leg to be used later for training 
-          save_bag.write("/leg_cluster_positions", ros::Time::now(), leg_cluster_positions); 
-
-          // Save scan
-          save_bag.write("/training_scan", ros::Time::now(), *scan);
-
-          // Save a marker of the position of the cluster we extracted. 
-          // Just used so we can playback the rosbag file 
-          // and visually verify the correct clusters have been extracted
-          visualization_msgs::MarkerArray ma;
-          for (int i = 0;
-              i < leg_cluster_positions.poses.size();
-              i++)
+          geometry_msgs::PoseArray leg_cluster_positions;
+          leg_cluster_positions.header.frame_id = laser_frame_;
+          std::vector<laser_processor::SampleSet*> pos_clusters;
+          for (std::list<laser_processor::SampleSet*>::iterator i = pos_processor.getClusters().begin();
+            i != pos_processor.getClusters().end();
+            ++i)
           {
-            visualization_msgs::Marker m;
-            m.header.frame_id = "laser_frame";
-            m.ns = "LEGS";
-            m.id = i;
-            m.type = m.SPHERE;
-            m.pose.position.x = leg_cluster_positions.poses[i].position.x;
-            m.pose.position.y = leg_cluster_positions.poses[i].position.y;
-            m.pose.position.z = 0.1;
-            m.scale.x = .2;
-            m.scale.y = .2;
-            m.scale.z = .2;
-            m.color.a = 1;
-            m.lifetime = ros::Duration(0.2);
-            m.color.b = 0.0;
-            m.color.r = 1.0;
-            ma.markers.push_back(m);
+
+            // Only use scan clusters that are in the specified positive cluster area
+            tf::Point cluster_position = (*i)->getPosition();
+
+            double x_pos = cluster_position[0];
+            double y_pos = cluster_position[1];
+            double angle = atan2(y_pos,x_pos) * 180 / PI;
+            double dist_abs = sqrt(x_pos*x_pos + y_pos*y_pos);
+
+            bool in_polygon = bounding_type==2 and pnpoly(pol_y_.size(),pol_x_,pol_y_,x_pos,y_pos);
+            if(bounding_type == 2){
+              pos_clusters.push_back(*i);
+            }
+            else{
+              bool in_bounding_box = bounding_type==1 and x_pos > x_min_ and x_pos < x_max_ and y_pos > y_min_ and y_pos < y_max_;
+              bool in_arc = !bounding_type and angle > min_angle_ and angle < max_angle_ and dist_abs < max_dist_;
+              if (in_bounding_box or in_arc or in_polygon) 
+              {         
+                geometry_msgs::Pose new_leg_cluster_position;
+                new_leg_cluster_position.position.x = cluster_position[0];
+                new_leg_cluster_position.position.y = cluster_position[1];
+                leg_cluster_positions.poses.push_back(new_leg_cluster_position);
+                pos_clusters.push_back(*i);
+              }
+            }
           }
-          save_bag.write("/visualization_marker_array", ros::Time::now(), ma);
+
+          auto neg_scan = *scan;
+          for(auto& cluster : pos_clusters){
+            for(auto& sample : *cluster){
+              neg_scan.ranges[sample->index] = neg_scan.range_max + 1;
+
+            }
+          }
+
+          for(auto& cluster : small_clusters){
+            for(auto& sample : *cluster){
+              neg_scan.ranges[sample->index] = neg_scan.range_max + 1;
+            }
+          }
+
+          save_bag.write("/neg_scan",m.getTime(),neg_scan);
+          if (!leg_cluster_positions.poses.empty())  // at least one leg has been found in current scan
+          {
+            // Save position of leg to be used later for training 
+            save_bag.write("/leg_cluster_positions", m.getTime(), leg_cluster_positions); 
+
+            // Save scan
+            save_bag.write("/training_scan", m.getTime(), *scan);
+
+            // Save a marker of the position of the cluster we extracted. 
+            // Just used so we can playback the rosbag file 
+            // and visually verify the correct clusters have been extracted
+            visualization_msgs::MarkerArray ma;
+            for (int i = 0;
+                i < leg_cluster_positions.poses.size();
+                i++)
+            {
+              visualization_msgs::Marker m;
+              m.header.frame_id = "laser_frame";
+              m.ns = "LEGS";
+              m.id = i;
+              m.type = m.SPHERE;
+              m.pose.position.x = leg_cluster_positions.poses[i].position.x;
+              m.pose.position.y = leg_cluster_positions.poses[i].position.y;
+              m.pose.position.z = 0.1;
+              m.scale.x = .2;
+              m.scale.y = .2;
+              m.scale.z = .2;
+              m.color.a = 1;
+              m.lifetime = ros::Duration(0.2);
+              m.color.b = 0.0;
+              m.color.r = 1.0;
+              ma.markers.push_back(m);
+            }
+            save_bag.write("/visualization_marker_array", m.getTime(), ma);
+          }
         }
       }
+      // else
+      // {
+      //   tf2_msgs::TFMessage tf_data = m.instantiate<tf2_msgs::TFMessage>();
+      //   save_bag.write(m.getTopic(),m.getTime(),tf_data);
+      // }
     }
     load_bag.close();
   }
+
+
+  // adapted from https://wrfranklin.org/Research/Short_Notes/pnpoly.html
+  int pnpoly(int nvert, std::vector<double> vertsx, std::vector<double> vertsy, float testx, float testy)
+  {
+  int i, j, c = 0;
+  for (i = 0, j = nvert-1; i < nvert; j = i++) {
+    if ( ((vertsy[i]>testy) != (vertsy[j]>testy)) &&
+    (testx < (vertsx[j]-vertsx[i]) * (testy-vertsy[i]) / (vertsy[j]-vertsy[i]) + vertsx[i]) )
+        c = !c;
+  }
+  if(c)
+  {
+    printf("\nTrue for point(%.2f,%.2f)",testx,testy);
+  }
+  else{
+    printf("\nFalse for(%.2f,%.2f)",testx,testy);
+  }
+  return c;
+  }
+
 
 private:
   tf::TransformListener tfl_;
@@ -193,12 +272,18 @@ private:
 
   std::string save_bag_file_;
   std::string load_bag_file_;  
+  std::string tf_data_;
 
   double cluster_dist_euclid_;
   int min_points_per_cluster_;
+  int max_points_per_cluster_;
 
   // to describe bounding box containing positive clusters
-  bool use_bounding_box_;
+  int bounding_type;
+
+  std::vector<double> pol_x_;
+  std::vector<double> pol_y_;
+  
   double x_min_;
   double x_max_;
   double y_min_;

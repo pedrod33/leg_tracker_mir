@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import rospy
 
@@ -76,6 +76,8 @@ class ObjectTracked:
             std_process_noise = 0.06666
         elif scan_frequency > 9.99 and scan_frequency < 10.01:
             std_process_noise = 0.05
+        elif scan_frequency > 12.5 and scan_frequency < 13:
+            std_process_noise = 0.01333
         elif scan_frequency > 14.99 and scan_frequency < 15.01:
             std_process_noise = 0.03333
         else:
@@ -502,7 +504,7 @@ class KalmanMultiTracker:
         """
         # Make sure we can get the required transform first:
         if self.use_scan_header_stamp_for_tfs:
-            tf_time = now            
+            tf_time = now       
             try:
                 self.listener.waitForTransform(self.publish_people_frame, self.fixed_frame, tf_time, rospy.Duration(1.0))
                 transform_available = True
@@ -629,6 +631,7 @@ class KalmanMultiTracker:
             for person in self.objects_tracked:
                 if person.is_person == True:
                     if self.publish_occluded or person.seen_in_current_scan: # Only publish people who have been seen in current scan, unless we want to publish occluded people
+                        print("the other if if person")
                         # Get position in the <self.publish_people_frame> frame 
                         ps = PointStamped()
                         ps.header.frame_id = self.fixed_frame
@@ -640,7 +643,7 @@ class KalmanMultiTracker:
                         except:
                             rospy.logerr("Not publishing people due to no transform from fixed_frame-->publish_people_frame")                                                
                             continue
-                        
+                        print(ps)
                         # publish to people_tracked topic
                         new_person = Person() 
                         new_person.pose.position.x = ps.point.x 
@@ -674,7 +677,7 @@ class KalmanMultiTracker:
                         marker.scale.z = 1.2
                         marker.pose.position.z = 0.8
                         self.marker_pub.publish(marker)  
-
+                        
                         # Sphere for head shape                        
                         marker.type = Marker.SPHERE
                         marker.scale.x = 0.2

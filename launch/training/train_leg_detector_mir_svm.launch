@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+
+<!-- Not shown, but you can also include test bags to get a testing error!-->
+<launch>
+	
+  <arg name="save_file" value="$(find leg_tracker)/config/trained_leg_detector_svm.yaml" />
+
+  <arg name="pos_bag_1" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2022-11-21-15-51-02-back-topic-split_extracted.bag" />
+  <arg name="pos_bag_2" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2022-11-21-15-51-02-front-topic-split_extracted.bag" />
+  <arg name="b_bag_2023" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2023-03-02-12-42-18-back-topic-split_extracted.bag" />
+  <arg name="f_bag_2023" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2023-03-02-12-42-18-front-topic-split_extracted.bag" />
+
+  <arg name="pos_scan_topic" value="/training_scan" />
+
+  <arg name="neg_bag_1" value="$(find leg_tracker)/rosbags/mir_data/mir_negative_2022-11-21-15-55-26.bag" />
+  <arg name="neg_bag_2" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2022-11-21-15-51-02-front-topic-split_extracted.bag" />
+  <arg name="neg_bag_3" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2022-11-21-15-51-02-back-topic-split_extracted.bag" />
+  <arg name="neg_scan_topic_1" value="/scan" />
+  <arg name="neg_scan_topic_2" value="/neg_scan" />
+
+  <arg name="test_neg_bag_1" value="$(find leg_tracker)/rosbags/mir_data/legs-test-2022-11-21-15-51-02-front-topic-split_extracted.bag" />
+  <arg name="test_pos_bag_1" value="$(find leg_tracker)/rosbags/mir_data/legs-test-2022-11-21-15-51-02-front-topic-split_extracted.bag" />
+  <arg name="test_neg_bag_2" value="$(find leg_tracker)/rosbags/mir_data/legs-test-2022-11-21-15-51-02-back-topic-split_extracted.bag" />
+  <arg name="test_pos_bag_2" value="$(find leg_tracker)/rosbags/mir_data/legs-test-2022-11-21-15-51-02-back-topic-split_extracted.bag" />
+
+
+  <node pkg="leg_tracker" type="train_leg_detector_svm" name="train_leg_detector" required="true"
+        args="--pos $(arg pos_bag_1) $(arg pos_scan_topic) 
+              --pos $(arg pos_bag_2) $(arg pos_scan_topic)                
+              --pos $(arg b_bag_2023) $(arg pos_scan_topic) 
+              --pos $(arg f_bag_2023) $(arg pos_scan_topic)
+              --neg $(arg b_bag_2023) $(arg neg_scan_topic_2) 
+              --neg $(arg f_bag_2023) $(arg neg_scan_topic_2)
+              --neg $(arg neg_bag_1) $(arg neg_scan_topic_1) 
+              --neg $(arg neg_bag_2) $(arg neg_scan_topic_2) 
+              --neg $(arg neg_bag_3) $(arg neg_scan_topic_2)
+              --test_neg $(arg test_neg_bag_1) $(arg neg_scan_topic_2)   
+              --test_neg $(arg test_neg_bag_2) $(arg neg_scan_topic_2)              
+              --test_pos $(arg test_pos_bag_1) $(arg pos_scan_topic)   
+              --test_pos $(arg test_pos_bag_2) $(arg pos_scan_topic)
+              --save_file $(arg save_file)" 
+              output="screen"/> 
+</launch>
+
+

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import rospy
 from leg_tracker.msg import Person, PersonArray, Leg, LegArray
@@ -96,6 +96,8 @@ class ObjectTracked:
             std_process_noise = 0.06666
         elif scan_frequency > 9 and scan_frequency < 11:
             std_process_noise = 0.05
+        elif scan_frequency > 12.5 and scan_frequency < 13:
+            std_process_noise = 0.01333
         elif scan_frequency > 14 and scan_frequency < 16:
             std_process_noise = 0.03333
         else:

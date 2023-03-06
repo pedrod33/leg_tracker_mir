@@ -190,16 +190,29 @@ public:
     
 
     // SET PARAMETERS
+    // forest_->setMaxDepth(20);                           // max depth of tree
+    // forest_->setMinSampleCount(2);                      // min sample count to split tree
+    // forest_->setRegressionAccuracy(0);                  // regression accuracy (?)
+    // forest_->setUseSurrogates(false);                   // use surrogates (?)
+    // forest_->setMaxCategories(1000);                    // max categories
+    // forest_->setPriors(priors_mat);                     // priors
+    // forest_->setCalculateVarImportance(false);          // calculate variable importance 
+    // forest_->setActiveVarCount(2);                      // number of active vars for each tree node (default from scikit-learn is: (int)round(sqrt(feat_count_))
+    // int nTrees = 100;                                   // max trees in forest (default of 10 from scikit-learn does worse)
+    // forest_->setRegressionAccuracy(0.001f);             // forest accuracy (sufficient OOB error)
+    // forest_->setTermCriteria(
+    //   cv::TermCriteria(cv::TermCriteria::MAX_ITER, nTrees, 1e-6)); // termination criteria. CV_TERMCRIT_ITER = once we reach max number of forests
+
     forest_->setMaxDepth(20);                           // max depth of tree
     forest_->setMinSampleCount(2);                      // min sample count to split tree
     forest_->setRegressionAccuracy(0);                  // regression accuracy (?)
     forest_->setUseSurrogates(false);                   // use surrogates (?)
-    forest_->setMaxCategories(1000);                    // max categories
+    //forest_->setMaxCategories(10);                    // max categories
     forest_->setPriors(priors_mat);                     // priors
     forest_->setCalculateVarImportance(false);          // calculate variable importance 
-    forest_->setActiveVarCount(2);                      // number of active vars for each tree node (default from scikit-learn is: (int)round(sqrt(feat_count_))
-    int nTrees = 100;                                   // max trees in forest (default of 10 from scikit-learn does worse)
-    forest_->setRegressionAccuracy(0.001f);             // forest accuracy (sufficient OOB error)
+    forest_->setActiveVarCount(0);                      // number of active vars for each tree node (default from scikit-learn is: (int)round(sqrt(feat_count_))
+    int nTrees = 200;                                   // max trees in forest (default of 10 from scikit-learn does worse)
+    forest_->setRegressionAccuracy(0.1f);             // forest accuracy (sufficient OOB error)
     forest_->setTermCriteria(
       cv::TermCriteria(cv::TermCriteria::MAX_ITER, nTrees, 1e-6)); // termination criteria. CV_TERMCRIT_ITER = once we reach max number of forests
 
@@ -209,6 +222,7 @@ public:
       cv_resp                // responses (i.e. labels)
      );
 
+    train_data->shuffleTrainTest();
     forest_->train(train_data);
   }
 
@@ -264,6 +278,7 @@ public:
     printf("   Positive: %d/%d \t\t Error: %g%%\n", correct_pos, (int)pos_data.size(), 100.0 - 100.0*(double)(correct_pos)/(int)pos_data.size());
     printf("   Negative: %d/%d \t\t Error: %g%%\n", correct_neg, (int)neg_data.size(), 100.0 - 100.0*(double)(correct_neg)/(int)neg_data.size());
     printf("   Combined: %d/%d \t\t Error: %g%%\n\n", correct_pos + correct_neg, (int)pos_data.size() + (int)neg_data.size(), 100.0 - 100.0*(double)(correct_pos + correct_neg)/((int)pos_data.size() + (int)neg_data.size()));
+    printf("   Accuracy: %d/%d \t\t -> %g%%\n\n", correct_pos + correct_neg, (int)pos_data.size() + (int)neg_data.size(), 100.0*(double)(correct_pos + correct_neg)/((int)pos_data.size() + (int)neg_data.size()));
   }
 
 
@@ -352,6 +367,12 @@ private:
                    dist_abs = sqrt(dist_x*dist_x + dist_y*dist_y);
             if (dist_abs < 0.0001)
             {
+              // static int ii = 0;
+              // if (ii == 0){
+              //   data.push_back(cf_.calcClusterFeatures(*i, *scan));
+
+              // }
+              // ii = 1-ii;
               data.push_back(cf_.calcClusterFeatures(*i, *scan));
               break;                                           
             }

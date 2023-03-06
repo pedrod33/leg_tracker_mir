@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<launch>
+  <!-- params -->
+  <param name="/use_sim_time" value="true" />
+  <param name="svm_file" value="$(find leg_tracker)/config/trained_leg_detector_mir_svm.yaml" />
+  <param name="scan_topic" value="/scan" />
+  <param name="fixed_frame" value="map"/>
+  <param name="scan_frequency" value="10"/>  
+  <param name="detection_threshold" value="0.3"/>
+  
+  <!-- run detect_leg_clusters -->  
+  <node pkg="leg_tracker" type="detect_leg_clusters_svm" name="detect_leg_clusters" output="screen"/>
+
+  <!-- run joint_leg_tracker -->
+  <node pkg="leg_tracker" type="joint_leg_tracker.py" name="joint_leg_tracker" output="screen"/>
+ 
+   <!-- run local_occupancy_grid_mapping -->
+  <node pkg="leg_tracker" type="local_occupancy_grid_mapping" name="local_occupancy_grid_mapping" output="screen"/> 
+  <node name="rviz" pkg="rviz" type="rviz" args="--display-config $(find leg_tracker)/config/visualize.rviz" required="false"/>
+  <node pkg="rosbag" type="play" name="player" output="screen" 
+    args="--delay=4
+      --clock 
+      --rate=0.5
+      -s 0 
+    $(find leg_tracker)/rosbags/mir_data/new_test_bag_2022-12-19-16-25-26.bag"/>
+
+    <param name="use_sim_time" value="true" />
+</launch>
+
