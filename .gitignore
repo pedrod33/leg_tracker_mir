@@ -2,3 +2,4 @@
 *log.txt
 .vscode
 *.ipynb_checkpoints
+*3D_pointcloud*
