@@ -16,8 +16,8 @@ To check that you've selected the right clusters, play back the generated bagfil
     <param name="scan_topic" value="back_laser_link"/>
     <param name="laser_frame" value="back_laser_link"/>
     <param name="tf_data" value="/tf"/>
-    <rosparam param="polygon_x"> [-0.26,-0.36,1.48,3.6,6.5,2.3,1.57,1.96,1.36,1.19,0.78,0.52,0.72,-0.45,-0.20,-0.6,-2.94,-1.35]</rosparam>
-    <rosparam param="polygon_y"> [-2.76,-3.64,-1.9,-3.9,-1.96,-0.49,0.185,1.38,1.86,2.53,2.9,3.44,6.4,7.45,2.5,2.4,4.22,-1.63]</rosparam>  
+    <rosparam param="polygon_x"> [-0.2,-0.31,1.55,3.6,6.5,2.2,1.57,1.96,1.36,1.19,0.78,0.45,0.72,-0.45,-0.20,-0.6,-2.94,-1.35]</rosparam>
+    <rosparam param="polygon_y"> [-2.8,-3.5,-1.8,-3.9,-1.96,-0.55,0.185,1.38,1.86,2.53,2.9,3.44,6.4,7.45,2.5,2.4,4.22,-1.63]</rosparam>   
   </node>
 
   <node pkg="leg_tracker" type="extract_positive_training_clusters" name="extract_positive_training_clusters2" output="screen">
@@ -26,8 +26,8 @@ To check that you've selected the right clusters, play back the generated bagfil
     <param name="scan_topic" value="front_laser_link"/>
     <param name="laser_frame" value="front_laser_link"/>
     <param name="tf_data" value="/tf"/>
-    <rosparam param="polygon_x"> [-0.83,-2,-2,-1.55,-1.5,-1.2,-0.6,-0.2,-0.48,0.32,0.55,1.3,2.4,2,2.1,2.8,1.5,5,2.75,0.9,-0.67]</rosparam>
-    <rosparam param="polygon_y"> [3.6,2.4,-2.35,-2.65,-3.1,-3.2,-2.2,-2.2,-7,-7,-4.3,-4.25,-5.7,-4,-2.7,-1.8,0.83,3,5,1.4,3]</rosparam>  
+    <rosparam param="polygon_x"> [-0.83,-2,-2,-1.55,-1.5,-1.2,-0.6,-0.2,-0.48,0.32,0.55,1.3,2.4,2,2.1,2.8,1.5,1.65,5,2.75,0.9,-0.72]</rosparam>
+    <rosparam param="polygon_y"> [3.6,2.4,-2.35,-2.65,-3.1,-3.2,-2.2,-2.2,-7,-7,-4.3,-4.25,-5.7,-4,-2.7,-1.8,0.83,1,3,5,1.4,3]</rosparam>  
   </node> 
 
   <node pkg="leg_tracker" type="extract_positive_training_clusters" name="extract_positive_training_clusters3" output="screen">
@@ -36,8 +36,8 @@ To check that you've selected the right clusters, play back the generated bagfil
     <param name="scan_topic" value="back_laser_link"/>
     <param name="laser_frame" value="back_laser_link"/>
     <param name="tf_data" value="/tf"/>
-    <rosparam param="polygon_x"> [-0.26,-0.36,1.48,3.6,6.5,2.3,1.57,1.96,1.36,1.19,0.78,0.52,0.72,-0.45,-0.20,-0.6,-2.94,-1.35]</rosparam>
-    <rosparam param="polygon_y"> [-2.76,-3.64,-1.9,-3.9,-1.96,-0.49,0.185,1.38,1.86,2.53,2.9,3.44,6.4,7.45,2.5,2.4,4.22,-1.63]</rosparam>  
+    <rosparam param="polygon_x"> [-0.2,-0.31,1.55,3.6,6.5,2.2,1.57,1.96,1.36,1.19,0.78,0.45,0.72,-0.45,-0.20,-0.6,-2.94,-1.35]</rosparam>
+    <rosparam param="polygon_y"> [-2.8,-3.5,-1.8,-3.9,-1.96,-0.55,0.185,1.38,1.86,2.53,2.9,3.44,6.4,7.45,2.5,2.4,4.22,-1.63]</rosparam>   
   </node>
 
   <node pkg="leg_tracker" type="extract_positive_training_clusters" name="extract_positive_training_clusters4" output="screen">
@@ -46,8 +46,8 @@ To check that you've selected the right clusters, play back the generated bagfil
     <param name="scan_topic" value="front_laser_link"/>
     <param name="laser_frame" value="front_laser_link"/>
     <param name="tf_data" value="/tf"/>
-    <rosparam param="polygon_x"> [-2,-0.8,-0.67,0.83,2.2,5.17,1.43,3.56,2,2.09,1.12,0.51,0.51,-0.13,-0.13,-0.6,-1,-2]</rosparam>
-    <rosparam param="polygon_y"> [2.45,3.67,3.1,1.55,6,3,0.89,-1.28,-2.66,-4.0,-4.37,-4.42,-7,-7,-2,-2,-3.41,-2.33]</rosparam>  
+    <rosparam param="polygon_x"> [-0.83,-2,-2,-1.55,-1.5,-1.2,-0.6,-0.2,-0.48,0.32,0.55,1.3,2.4,2,2.1,2.8,1.5,1.65,5,2.75,0.9,-0.72]</rosparam>
+    <rosparam param="polygon_y"> [3.6,2.4,-2.35,-2.65,-3.1,-3.2,-2.2,-2.2,-7,-7,-4.3,-4.25,-5.7,-4,-2.7,-1.8,0.83,1,3,5,1.4,3]</rosparam>  
   </node>
 
   <node pkg="leg_tracker" type="extract_positive_training_clusters" name="extract_positive_training_clusters5" output="screen">
@@ -56,7 +56,7 @@ To check that you've selected the right clusters, play back the generated bagfil
     <param name="scan_topic" value="/f_scan"/>
     <param name="laser_frame" value="front_laser_link"/>
     <param name="tf_data" value="/tf"/>
-    <rosparam param="polygon_x"> [-1.8,-0.7,1.3,5,6.55,1.82,1.6,2.6,3.1,1.15,0.5,-0.1,-0.35,-0.85,-2.5,-3.05,-2,-2.15,-3.3,-3.8,-2]</rosparam>
+    <rosparam param="polygon_x"> [-1.8,-0.7,1.3,5,6.25,1.82,1.6,2.6,3.1,1.15,0.5,-0.1,-0.35,-0.85,-2.5,-3.05,-2,-2.15,-3.3,-3.8,-2]</rosparam>
     <rosparam param="polygon_y"> [-2.45,-2.9,-0.6,-2.35,0.5,0,0.2,2.15,2.45,3.35,2.35,2.5,3.6,2.8,7.5,6.5,4.2,4.1,-6.05,5,2.77]</rosparam>  
   </node>
   <node pkg="leg_tracker" type="extract_positive_training_clusters" name="extract_positive_training_clusters6" output="screen">
@@ -65,8 +65,8 @@ To check that you've selected the right clusters, play back the generated bagfil
     <param name="scan_topic" value="/b_scan"/>
     <param name="laser_frame" value="back_laser_link"/>
     <param name="tf_data" value="/tf"/>
-    <rosparam param="polygon_x"> [-1.6,-2.5,-2.1,-1.35,-0.7,-1.3,-1,0,0,1.3,1.7,0.86,1.37,2.13,2.54,1.15,1.4,2,3,3.86,2,1.25,1.57,5.34,5.7,2.9,2.9,3.62,2,1.2,0]</rosparam>
-    <rosparam param="polygon_y"> [1.8,-2.9,-3.1,-2,-2.2,-4,-4.4,-2.4,-9.7,-7.05,-7,-4,-3.8,-6.3,-5.5,-2.5,-2.5,-3,-4.5,-2.9,-1.58,-0.3,0,-0.1,0.72,0.42,1,2,3,2.6,3]</rosparam>  
+    <rosparam param="polygon_x"> [-1.6,-2.5,-2.1,-1.35,-0.7,-1.3,-1,0.05,0,1.3,1.7,0.86,1.37,2.13,2.54,1.15,1.4,2,3,3.8,2,1.1,1.57,5.34,5.7,2.9,2.9,3.62,2,1.2,0]</rosparam>
+    <rosparam param="polygon_y"> [1.8,-2.9,-3.1,-2,-2.2,-4,-3.4,-2.4,-9.7,-7.05,-7,-4,-3.8,-6.3,-5.5,-2.5,-2.5,-3,-4.5,-2.9,-1.58,-0.35,0,-0.1,0.72,0.42,1,2,3,2.6,3]</rosparam>  
   </node>
 
 </launch>

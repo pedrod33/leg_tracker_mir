@@ -631,7 +631,6 @@ class KalmanMultiTracker:
             for person in self.objects_tracked:
                 if person.is_person == True:
                     if self.publish_occluded or person.seen_in_current_scan: # Only publish people who have been seen in current scan, unless we want to publish occluded people
-                        print("the other if if person")
                         # Get position in the <self.publish_people_frame> frame 
                         ps = PointStamped()
                         ps.header.frame_id = self.fixed_frame
@@ -643,7 +642,6 @@ class KalmanMultiTracker:
                         except:
                             rospy.logerr("Not publishing people due to no transform from fixed_frame-->publish_people_frame")                                                
                             continue
-                        print(ps)
                         # publish to people_tracked topic
                         new_person = Person() 
                         new_person.pose.position.x = ps.point.x 
@@ -658,7 +656,8 @@ class KalmanMultiTracker:
                         people_tracked_msg.people.append(new_person)
 
                         # publish rviz markers       
-                        # Cylinder for body 
+                        # Cylinder for body
+                        print((rospy.Duration(3) - (rospy.get_rostime() - person.last_seen)).to_sec()/rospy.Duration(3).to_sec() + 0.1)
                         marker = Marker()
                         marker.header.frame_id = self.publish_people_frame
                         marker.header.stamp = now
@@ -666,7 +665,7 @@ class KalmanMultiTracker:
                         marker.color.r = person.colour[0]
                         marker.color.g = person.colour[1]
                         marker.color.b = person.colour[2]          
-                        marker.color.a = (rospy.Duration(3) - (rospy.get_rostime() - person.last_seen)).to_sec()/rospy.Duration(3).to_sec() + 0.1
+                        marker.color.a = 1#(rospy.Duration(3) - (rospy.get_rostime() - person.last_seen)).to_sec()/rospy.Duration(3).to_sec() + 0.1
                         marker.pose.position.x = ps.point.x 
                         marker.pose.position.y = ps.point.y
                         marker.id = marker_id 
@@ -705,7 +704,7 @@ class KalmanMultiTracker:
                         marker.color.r = person.colour[0]
                         marker.color.g = person.colour[1]
                         marker.color.b = person.colour[2]          
-                        marker.color.a = (rospy.Duration(3) - (rospy.get_rostime() - person.last_seen)).to_sec()/rospy.Duration(3).to_sec() + 0.1                        
+                        marker.color.a = 1#(rospy.Duration(3) - (rospy.get_rostime() - person.last_seen)).to_sec()/rospy.Duration(3).to_sec() + 0.1                        
                         start_point = Point()
                         end_point = Point()
                         start_point.x = marker.pose.position.x 

@@ -74,32 +74,26 @@ public:
         ROS_ERROR("Polygon does not have same amount of x and y coordinates");
       }
     }
-    else
+    else if (nh_private.getParam("x_min", x_min_) and
+        nh_private.getParam("x_max", x_max_) and
+        nh_private.getParam("y_min", y_min_) and
+        nh_private.getParam("y_max", y_max_))                        
     {
-      bounding_type = 1;
+        bounding_type = 1;
     }
-    if (!nh_private.getParam("x_min", x_min_) or
-        !nh_private.getParam("x_max", x_max_) or
-        !nh_private.getParam("y_min", y_min_) or
-        !nh_private.getParam("y_max", y_max_))                        
+    else if (nh_private.getParam("min_angle", min_angle_) and
+        nh_private.getParam("max_angle", max_angle_) and
+        nh_private.getParam("max_dist", max_dist_))                       
     {
-      ROS_INFO("Couldn't get bounding box for positive clusters. Assuming you've specified a min/max scan angle and a max distance or a polygon instead.");
-      if(bounding_type==1){
-        bounding_type = 0;
-      }
-    }
-    if (!nh_private.getParam("min_angle", min_angle_) or
-        !nh_private.getParam("max_angle", max_angle_) or
-        !nh_private.getParam("max_dist", max_dist_))                       
-    {
-      if (bounding_type)
-      {
-        ROS_INFO("Couldn't get min/max scan angle for positive clusters. Assuming you've specified a bounding box instead.");
-      }
-      else
-      {
-        ROS_ERROR("Couldn't get bounding box or scan min/max angle for positive clusters");
-      }
+      bounding_type = 0;
+      // if (bounding_type)
+      // {
+      //   ROS_INFO("Couldn't get min/max scan angle for positive clusters. Assuming you've specified a bounding box instead.");
+      // }
+      // else
+      // {
+      //   ROS_ERROR("Couldn't get bounding box or scan min/max angle for positive clusters");
+      // }
     }
 
     // Print back params:
@@ -116,7 +110,7 @@ public:
   */
   void extract()
   {
-    printf("TRIES TO EXTRACT");
+    ROS_INFO("IS EXTRACTING");
     // Open rosbag we'll be saving to
     rosbag::Bag save_bag;
     save_bag.open(save_bag_file_.c_str(), rosbag::bagmode::Write);
@@ -137,10 +131,15 @@ public:
 
         sensor_msgs::LaserScan::ConstPtr scan = m.instantiate<sensor_msgs::LaserScan>();
         if (scan != NULL)
-        {          
+        {
           // Positive scan points
-          laser_processor::ScanProcessor pos_processor(*scan,1,pol_x_,pol_y_);          
-
+          laser_processor::ScanProcessor pos_processor;
+          if(bounding_type==2){
+            pos_processor.filterClusters(*scan,pol_x_,pol_y_); 
+          }
+          else{
+            pos_processor.filterClusters(*scan); 
+          }
           pos_processor.splitConnected(cluster_dist_euclid_);
           printf("Number of clusters %ld.\n",pos_processor.getClusters().size());
 
@@ -163,21 +162,15 @@ public:
             double angle = atan2(y_pos,x_pos) * 180 / PI;
             double dist_abs = sqrt(x_pos*x_pos + y_pos*y_pos);
 
-            bool in_polygon = bounding_type==2 and pnpoly(pol_y_.size(),pol_x_,pol_y_,x_pos,y_pos);
-            if(bounding_type == 2){
+            bool in_bounding_box = bounding_type==1 and x_pos > x_min_ and x_pos < x_max_ and y_pos > y_min_ and y_pos < y_max_;
+            bool in_arc = !bounding_type and angle > min_angle_ and angle < max_angle_ and dist_abs < max_dist_;
+            if (in_bounding_box or in_arc or bounding_type==2) 
+            {         
+              geometry_msgs::Pose new_leg_cluster_position;
+              new_leg_cluster_position.position.x = cluster_position[0];
+              new_leg_cluster_position.position.y = cluster_position[1];
+              leg_cluster_positions.poses.push_back(new_leg_cluster_position);
               pos_clusters.push_back(*i);
-            }
-            else{
-              bool in_bounding_box = bounding_type==1 and x_pos > x_min_ and x_pos < x_max_ and y_pos > y_min_ and y_pos < y_max_;
-              bool in_arc = !bounding_type and angle > min_angle_ and angle < max_angle_ and dist_abs < max_dist_;
-              if (in_bounding_box or in_arc or in_polygon) 
-              {         
-                geometry_msgs::Pose new_leg_cluster_position;
-                new_leg_cluster_position.position.x = cluster_position[0];
-                new_leg_cluster_position.position.y = cluster_position[1];
-                leg_cluster_positions.poses.push_back(new_leg_cluster_position);
-                pos_clusters.push_back(*i);
-              }
             }
           }
 
@@ -194,10 +187,10 @@ public:
               neg_scan.ranges[sample->index] = neg_scan.range_max + 1;
             }
           }
-
           save_bag.write("/neg_scan",m.getTime(),neg_scan);
           if (!leg_cluster_positions.poses.empty())  // at least one leg has been found in current scan
           {
+
             // Save position of leg to be used later for training 
             save_bag.write("/leg_cluster_positions", m.getTime(), leg_cluster_positions); 
 
@@ -279,7 +272,7 @@ private:
   int max_points_per_cluster_;
 
   // to describe bounding box containing positive clusters
-  int bounding_type;
+  int bounding_type = -1;
 
   std::vector<double> pol_x_;
   std::vector<double> pol_y_;
@@ -299,6 +292,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv,"extract_positive_leg_clusters");
   ExtractPositiveTrainingClusters eptc;
+  ROS_INFO("THi");
   eptc.extract();
   ROS_INFO("Finished successfully! (you still have press ctrl+c to terminate if you ran from a launch file)"); 
   /** @todo Automatically terminate after finishing successfully */

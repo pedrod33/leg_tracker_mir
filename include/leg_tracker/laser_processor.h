@@ -132,13 +132,18 @@ public:
   * @brief Constructor
   * @param scan Scan to be processed
   */
-  ScanProcessor(const sensor_msgs::LaserScan& scan, const int nvert, const std::vector<double> vertsx, std::vector<double> vertsy);
+  //ScanProcessor(const sensor_msgs::LaserScan& scan, const int nvert, const std::vector<double> vertsx, std::vector<double> vertsy);
   ScanProcessor(const sensor_msgs::LaserScan& scan);
+  ScanProcessor();
 
   /**
   * @brief Destructor
   */
   ~ScanProcessor();
+
+  void filterClusters(const sensor_msgs::LaserScan& scan, const std::vector<double> vertsx, std::vector<double> vertsy);
+
+  void filterClusters(const sensor_msgs::LaserScan& scan);
 
   /**
   * @brief Remove and delete all references to scan clusters less than a minimum size

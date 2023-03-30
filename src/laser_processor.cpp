@@ -46,12 +46,14 @@ Sample* Sample::Extract(int ind, const sensor_msgs::LaserScan& scan)
   s->range = scan.ranges[ind];
   s->x = cos( scan.angle_min + ind*scan.angle_increment ) * s->range;
   s->y = sin( scan.angle_min + ind*scan.angle_increment ) * s->range;
+
   if (s->range > scan.range_min && s->range < scan.range_max)
-  {
+  {    
     return s;
   }
   else
   {
+
     delete s;
     return NULL;
   }
@@ -79,43 +81,40 @@ tf::Point SampleSet::getPosition()
 }
 
 
-ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan, const int nvert, const std::vector<double> vertsx, std::vector<double> vertsy ) 
-{
-  scan_ = scan;
+// ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan, const int nvert, const std::vector<double> vertsx, std::vector<double> vertsy ) 
+// {
+//   scan_ = scan;
 
-  SampleSet* cluster = new SampleSet;
+//   SampleSet* cluster = new SampleSet;
 
-  for (int i = 0; i < scan.ranges.size(); i++)
-  {
-    Sample* s = Sample::Extract(i, scan);
-    int l, j, c = 0;
-    for (l = 0, j = nvert-1; l < nvert; j = l++) {
-      if ( ((vertsy[l]>s->x) != (vertsy[j]>s->y)) &&
-      (s->x < (vertsx[j]-vertsx[l]) * (s->y-vertsy[l]) / (vertsy[j]-vertsy[l]) + vertsx[l]) )
-          c = !c;
-    }
-    if(c)
-    {
-      printf("\nTrue for point(%.2f,%.2f)",s->x,s->y);
-    }
-    else{
-      printf("\nFalse for(%.2f,%.2f)",s->x,s->y);
-    }
+//   for (int i = 0; i < scan.ranges.size(); i++)
+//   {
+//     Sample* s = Sample::Extract(i, scan);
+//     int l, j, c = 0;
+//     for (l = 0, j = nvert-1; l < nvert; j = l++) {
+//       if ( ((vertsy[l]>s->x) != (vertsy[j]>s->y)) &&
+//       (s->x < (vertsx[j]-vertsx[l]) * (s->y-vertsy[l]) / (vertsy[j]-vertsy[l]) + vertsx[l]) )
+//           c = !c;
+//     }
+//     if(c)
+//     {
+//       printf("\nTrue for point(%.2f,%.2f)",s->x,s->y);
+//     }
+//     else{
+//       printf("\nFalse for(%.2f,%.2f)",s->x,s->y);
+//     }
     
+//     if (s != NULL && c)
+//       cluster->insert(s);
+//   }
 
-
-    if (s != NULL && c)
-      cluster->insert(s);
-  }
-
-  clusters_.push_back(cluster);
-  printf("%ld",clusters_.size());
-}
+//   clusters_.push_back(cluster);
+//   printf("N clusters:%ld\n",clusters_.size());
+// }
 
 ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan) 
 {
   scan_ = scan;
-
   SampleSet* cluster = new SampleSet;
 
   for (int i = 0; i < scan.ranges.size(); i++)
@@ -127,13 +126,67 @@ ScanProcessor::ScanProcessor(const sensor_msgs::LaserScan& scan)
   }
 
   clusters_.push_back(cluster);
-  printf("%ld",clusters_.size());
 }
+
+ScanProcessor::ScanProcessor() 
+{}
+
 
 ScanProcessor::~ScanProcessor()
 {
   for ( std::list<SampleSet*>::iterator c = clusters_.begin(); c != clusters_.end(); ++c)
     delete (*c);
+}
+
+
+void ScanProcessor::filterClusters(const sensor_msgs::LaserScan& scan, const std::vector<double> vertsx, std::vector<double> vertsy)
+{
+
+  //CREATE POLYGON STRUCTURE WITH METHOD THAT ALLOWS TO KNOW IF POINT IS INSIDE OR OUTSIDE
+  scan_ = scan;
+  SampleSet* cluster = new SampleSet;
+  int nvert = vertsx.size();
+  for (int i = 0; i < scan.ranges.size(); i++)
+  {
+
+    Sample* s = Sample::Extract(i, scan);
+
+    if (s != NULL){
+
+      //check if point is inside bounding box
+      int l, j, c = 0;
+      for (l = 0, j = nvert-1; l < nvert; j = l++) {
+
+        if ( ((vertsy[l] > s->y) != (vertsy[j] > s->y)) &&
+        (s->x < (vertsx[j]-vertsx[l]) * (s->y-vertsy[l]) / (vertsy[j]-vertsy[l]) + vertsx[l]) )
+          {
+            c = !c;
+          }
+      }
+      // add point to the cluster
+      if(c){
+        printf("INSERTED");
+        cluster->insert(s);
+      }
+    }
+  }
+
+  clusters_.push_back(cluster);
+}
+
+void ScanProcessor::filterClusters(const sensor_msgs::LaserScan& scan)
+{
+  scan_ = scan;
+  SampleSet* cluster = new SampleSet;
+
+  for (int i = 0; i < scan.ranges.size(); i++)
+  {
+    Sample* s = Sample::Extract(i, scan);
+    if (s != NULL){
+      cluster->insert(s);
+    }
+  }
+  clusters_.push_back(cluster);
 }
 
 std::vector<SampleSet*> ScanProcessor::removeLessThan(uint32_t num)
@@ -221,22 +274,22 @@ void ScanProcessor::splitConnected(float thresh)
 }
 
 
-int pnpoly(int nvert, std::vector<double> vertsx, std::vector<double> vertsy, float testx, float testy)
-{
-  int i, j, c = 0;
-  for (i = 0, j = nvert-1; i < nvert; j = i++) {
-    if ( ((vertsy[i]>testy) != (vertsy[j]>testy)) &&
-    (testx < (vertsx[j]-vertsx[i]) * (testy-vertsy[i]) / (vertsy[j]-vertsy[i]) + vertsx[i]) )
-        c = !c;
-  }
-  if(c)
-  {
-    printf("\nTrue for point(%.2f,%.2f)",testx,testy);
-  }
-  else{
-    printf("\nFalse for(%.2f,%.2f)",testx,testy);
-  }
-  return c;
-}
+// int pnpoly(int nvert, std::vector<double> vertsx, std::vector<double> vertsy, float testx, float testy)
+// {
+//   int i, j, c = 0;
+//   for (i = 0, j = nvert-1; i < nvert; j = i++) {
+//     if ( ((vertsy[i]>testy) != (vertsy[j]>testy)) &&
+//     (testx < (vertsx[j]-vertsx[i]) * (testy-vertsy[i]) / (vertsy[j]-vertsy[i]) + vertsx[i]) )
+//         c = !c;
+//   }
+//   if(c)
+//   {
+//     printf("\nTrue for point(%.2f,%.2f)",testx,testy);
+//   }
+//   else{
+//     printf("\nFalse for(%.2f,%.2f)",testx,testy);
+//   }
+//   return c;
+// }
 
 }; // namespace laser_processor 
