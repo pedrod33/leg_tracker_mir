@@ -1,23 +1,37 @@
 <?xml version="1.0" ?>
 <launch>
   <!-- params -->
-  <param name="forest_file" value="$(find leg_tracker)/config/trained_leg_detector_RForest_sim.yaml" />
-  <param name="scan_topic" value="/scan" />
-  <param name="~scan_topic" value="/scan_multi" />
+  <arg name="~scan_topic" value="/scan_multi" />
+  <arg name="min_points_per_cluster" value="2" />
+  <arg name="cluster_dist_euclid" value="0.13" />
+  <arg name="scan_topic" value="/scan" />
+  <arg name="detection_threshold" value="0.50"/>
+  <arg name="use_scan_header_stamp_for_tfs" value="false"/>
 
-  <param name="fixed_frame" value="map"/>
+  <arg name="file_location" value="$(find leg_tracker)/feature_data/new_features.csv"/>
+  <arg name="fixed_frame" value="map"/>
 
-  <param name="scan_frequency" value="10"/>  
-  <param name="detection_threshold" value="0.50"/>
-  <param name="use_sim_time" value="true" />
-  <param name="local_map_cells_per_side" value="2000" />
-  <param name="local_map_resolution" value="0.1" />
-  <param name="max_detect_distance" value="29" />  
+  <arg name="scan_frequency" value="10"/>  
+  <arg name="use_sim_time" value="true" />
+  <arg name="local_map_cells_per_side" value="2000" />
+  <arg name="local_map_resolution" value="0.1" />
+  <arg name="max_detect_distance" value="29" />  
+  <arg name="ml_model_file" value="$(find leg_tracker)/models/NN_32.h5"/>
+
+  <node pkg="leg_tracker" type="detect_leg_clusters.py" name="detect_leg_clusters" output="screen">
+    <param name="/ml_model_file" value="$(arg ml_model_file)"/>
+  </node>
+
 
   <!-- run detect_leg_clusters -->  
-  <node pkg="leg_tracker" type="detect_leg_clusters_rf" name="detect_leg_clusters" output="screen">
-    <param name="min_points_per_cluster" value="2" />
-    <param name="cluster_dist_euclid" value="0.13" />
+  <node pkg="leg_tracker" type="tensorflow_classification" name="tensorflow_classification" output="screen">
+    <param name="scan_topic" value="$(arg scan_topic)"/>
+    <param name="fixed_frame" value="$(arg fixed_frame)"/>
+    <param name="cluster_dist_euclid" value="$(arg cluster_dist_euclid)"/>
+    <param name="detection_threshold" value="$(arg detection_threshold)"/>
+    <param name="min_points_per_cluster" value="$(arg min_points_per_cluster)"/>
+    <param name="use_scan_header_stamp_for_tfs" value="$(arg use_scan_header_stamp_for_tfs)"/>
+    <param name="max_detect_distance" value="$(arg max_detect_distance)"/>
   </node>
 
   <!-- Merge laser scans -->
@@ -47,10 +61,8 @@
   
   <!-- mapping -->
   <node pkg="iris_lama_ros" type="slam2d_ros" name="slam2d_ros" output="screen">
-    <param name="scan_topic" value="/scan_multi_filtered"/>
+    <param name="scan_topic" value="/scan_multi"/>
     <param name="mrange" value="0"/>
-    <remap from="/local_map" to="/map" />
-
   </node>
   
   <!-- <node pkg="dissertation" type="detection_scan_rm" name="detection_scan_rm">

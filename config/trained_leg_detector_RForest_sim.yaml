@@ -18,7 +18,7 @@ opencv_ml_rtrees:
          rows: 1
          cols: 2
          dt: d
-         data: [ 6.9525308604396486e-310, 6.9525308604412296e-310 ]
+         data: [ 6.9530256320649820e-310, 6.9530256320665630e-310 ]
       nactive_vars: 0
    global_var_idx: 1
    var_idx: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ]
@@ -417,7 +417,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -449,7 +449,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -577,7 +577,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:5.0869438171386719e+01 }
+                  - { var:4, quality:136., le:1.3872451782226562e+02 }
             -
                depth: 1
                value: 1.
@@ -593,7 +593,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -609,7 +609,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -657,7 +657,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:5.0869438171386719e+01 }
+                  - { var:4, quality:136., le:1.0728141784667969e+02 }
             -
                depth: 1
                value: 1.
@@ -673,7 +673,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -801,7 +801,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -945,7 +945,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:5.0869438171386719e+01 }
+                  - { var:4, quality:136., le:8.8114929199218750e+01 }
             -
                depth: 1
                value: 1.
@@ -1607,7 +1607,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -1724,7 +1724,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -1740,7 +1740,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6689853668212891e+00 }
+                  - { var:4, quality:136., le:9.6665887832641602e+00 }
             -
                depth: 1
                value: 1.
@@ -1820,7 +1820,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:7.9081848144531250e+01 }
+                  - { var:4, quality:136., le:1.0728141784667969e+02 }
             -
                depth: 1
                value: 1.
@@ -1836,7 +1836,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:5.0869438171386719e+01 }
+                  - { var:4, quality:136., le:8.8114929199218750e+01 }
             -
                depth: 1
                value: 1.
@@ -1868,7 +1868,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -2028,7 +2028,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:5.0869438171386719e+01 }
+                  - { var:4, quality:136., le:5.7722084045410156e+01 }
             -
                depth: 1
                value: 1.
@@ -2583,7 +2583,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -2759,7 +2759,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6689853668212891e+00 }
+                  - { var:4, quality:136., le:9.6665887832641602e+00 }
             -
                depth: 1
                value: 1.
@@ -2999,7 +2999,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6699934005737305e+00 }
+                  - { var:4, quality:136., le:9.6675968170166016e+00 }
             -
                depth: 1
                value: 1.
@@ -3127,7 +3127,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.
@@ -3223,7 +3223,7 @@ opencv_ml_rtrees:
                value: -1.
                norm_class_idx: 0
                splits:
-                  - { var:4, quality:136., le:9.6708211898803711e+00 }
+                  - { var:4, quality:136., le:9.6684246063232422e+00 }
             -
                depth: 1
                value: 1.

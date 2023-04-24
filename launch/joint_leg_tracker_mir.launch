@@ -47,7 +47,7 @@
   <node pkg="rosbag" type="play" name="player" output="screen" 
   args="--delay=4
     --clock 
-    --rate=1.0
+    --rate=0.5
     -s 0 
   $(find leg_tracker)/rosbags/mir_data/new_test_bag_2022-12-19-16-25-26.bag"/>
 

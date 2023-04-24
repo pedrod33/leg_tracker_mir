@@ -31,6 +31,11 @@ add_message_files(
   LegArray.msg
 )
 
+add_service_files(
+  FILES
+  Classification_TF.srv
+)
+
 generate_messages(   
   DEPENDENCIES  
   std_msgs  
@@ -69,6 +74,18 @@ add_executable(
 )
 target_link_libraries(
   detect_leg_clusters_rf
+  ${catkin_LIBRARIES}
+)
+
+add_executable(
+  tensorflow_classification
+  src/detect_leg_clusters_tensorflow.cpp
+  src/laser_processor.cpp
+  src/cluster_features.cpp
+
+)
+target_link_libraries(
+  tensorflow_classification
   ${catkin_LIBRARIES}
 )
 
