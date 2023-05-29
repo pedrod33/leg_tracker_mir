@@ -26,7 +26,4 @@
   <run_depend>image_geometry</run_depend>
   <run_depend>message_runtime</run_depend>  
   <run_depend>libfftw3</run_depend>
-
-  <run_depend>message_runtime</run_depend>
-
 </package>

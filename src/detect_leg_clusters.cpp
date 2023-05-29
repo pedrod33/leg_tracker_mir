@@ -35,9 +35,11 @@
 #include <ros/ros.h>
 
 #include <tf/transform_listener.h>
+#include <cmath>
 
 #include <visualization_msgs/Marker.h>
 #include <sensor_msgs/LaserScan.h>
+#include <geometry_msgs/Point.h>
 
 // OpenCV
 #include <opencv2/core/core.hpp>
@@ -103,7 +105,11 @@ public:
     // ROS subscribers + publishers
     scan_sub_ =  nh_.subscribe(scan_topic, 10, &DetectLegClusters::laserCallback, this);
     markers_pub_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 20);
+    scan_markers_pub_ = nh_.advertise<visualization_msgs::Marker>("visualization_scan", 20);
+
     detected_leg_clusters_pub_ = nh_.advertise<leg_tracker::LegArray>("detected_leg_clusters", 20);
+    processed_scan_pub_ = nh_.advertise<sensor_msgs::LaserScan>("/proc_scan_multi", 20);
+
   }
 
 private:
@@ -121,9 +127,11 @@ private:
 
   ros::NodeHandle nh_;
   ros::Publisher markers_pub_;
-  ros::Publisher detected_leg_clusters_pub_;
-  ros::Subscriber scan_sub_;
+  ros::Publisher scan_markers_pub_;
 
+  ros::Publisher detected_leg_clusters_pub_;
+  ros::Publisher processed_scan_pub_;
+  ros::Subscriber scan_sub_;
   std::string fixed_frame_;
   
   double detection_threshold_;
@@ -143,7 +151,10 @@ private:
   * Called every time a laser scan is published.
   */
   void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
-  {         
+  {
+    
+    sensor_msgs::LaserScan processed_scan;
+    processed_scan = *scan;
     laser_processor::ScanProcessor processor(*scan); 
     processor.splitConnected(cluster_dist_euclid_);        
     processor.removeLessThan(min_points_per_cluster_);    
@@ -193,9 +204,11 @@ private:
       for (std::list<laser_processor::SampleSet*>::iterator cluster = processor.getClusters().begin();
        cluster != processor.getClusters().end();
        cluster++)
-      {   
+      {
         // Get position of cluster in laser frame
         tf::Stamped<tf::Point> position((*cluster)->getPosition(), tf_time, scan->header.frame_id);
+        
+        //check distance to robot
         float rel_dist = pow(position[0]*position[0] + position[1]*position[1], 1./2.);
         
         // Only consider clusters within max_distance. 
@@ -230,7 +243,44 @@ private:
             }
 
             if (transform_successful_2)
-            {  
+            {
+
+              int it = 0;
+              for (std::vector<float>::iterator laser_point = processed_scan.ranges.begin();
+              laser_point != processed_scan.ranges.end();
+              laser_point++)
+              {
+                if (processed_scan.range_min <= *laser_point <= processed_scan.range_max){
+                  float angle = processed_scan.angle_min + it * processed_scan.angle_increment;
+                  float dist = *laser_point;
+                  tf::Point pos = tf::Point(cos(angle)*dist,sin(angle)*dist,0);
+                  tf::Stamped<tf::Point> s_point_position(pos, tf_time, scan->header.frame_id);
+
+                  tfl_.transformPoint(fixed_frame_, s_point_position, s_point_position);
+
+                  if (sqrt((s_point_position[0]-position[0])*(s_point_position[0]-position[0])+(s_point_position[1]-position[1])*(s_point_position[1]-position[1]))<0.35){
+                    // visualization_msgs::Marker m;
+                    // m.header.stamp = scan->header.stamp;
+                    // m.header.frame_id = fixed_frame_;
+                    // m.ns = "POINTS";
+                    // m.type = m.SPHERE;
+                    // m.pose.position.x = s_point_position[0] ;
+                    // m.pose.position.y = s_point_position[1];
+                    // m.pose.position.z = 0.2;
+                    // m.scale.x = 0.23;
+                    // m.scale.y = 0.23;
+                    // m.scale.z = 0.23;
+                    // m.color.a = 1;
+                    // m.color.r = 0;
+                    // m.color.g = 0;
+                    // m.color.b = 1;
+                    // m.lifetime = ros::Duration(10);
+                    // scan_markers_pub_.publish(m);
+                    processed_scan.ranges[it] = processed_scan.range_max + 1;
+                  }
+                }
+                it++;
+              }  
               // Add detected cluster to set of detected leg clusters, along with its relative position to the laser scanner
               leg_tracker::Leg new_leg;
               new_leg.position.x = position[0];
@@ -241,6 +291,8 @@ private:
           }
         }
       }     
+      processed_scan.header.stamp = ros::Time::now();
+      processed_scan_pub_.publish(processed_scan);
     }    
  
 

@@ -3,7 +3,7 @@
 <!-- Not shown, but you can also include test bags to get a testing error!-->
 <launch>
 	
-  <arg name="save_file" value="$(find leg_tracker)/config/trained_leg_detector_RForest.yaml" />
+  <arg name="save_file" value="$(find leg_tracker)/config/trained_leg_detector_RForest_test.yaml" />
 
   <arg name="pos_bag_1" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2022-11-21-15-51-02-back-topic-split_extracted.bag" />
   <arg name="pos_bag_2" value="$(find leg_tracker)/rosbags/mir_data/legs-train-2022-11-21-15-51-02-front-topic-split_extracted.bag" />

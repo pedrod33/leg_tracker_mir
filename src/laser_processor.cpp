@@ -165,7 +165,6 @@ void ScanProcessor::filterClusters(const sensor_msgs::LaserScan& scan, const std
       }
       // add point to the cluster
       if(c){
-        printf("INSERTED");
         cluster->insert(s);
       }
     }

@@ -9,15 +9,15 @@ from leg_tracker.msg import Person, PersonArray, Leg, LegArray
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
-
 # Standard python modules
 import numpy as np
 import random
 import math
 from scipy.optimize import linear_sum_assignment
+from people_msgs.msg import People, PersonProxemic
 import scipy.stats
 import scipy.spatial
-from geometry_msgs.msg import PointStamped, Point
+from geometry_msgs.msg import PointStamped, Point, Pose
 import tf
 import copy
 import timeit
@@ -194,9 +194,10 @@ class KalmanMultiTracker:
 
     	# ROS publishers
         self.people_tracked_pub = rospy.Publisher('people_tracked', PersonArray, queue_size=300)
-        self.people_detected_pub = rospy.Publisher('people_detected', PersonArray, queue_size=300)
+        self.people_detected_pub = rospy.Publisher('people_detected', PersonArray, queue_size=1)
         self.marker_pub = rospy.Publisher('visualization_marker', Marker, queue_size=300)
         self.non_leg_clusters_pub = rospy.Publisher('non_leg_clusters', LegArray, queue_size=300)
+        self.prox_people_pub = rospy.Publisher('/people', People, queue_size=1)
 
         # ROS subscribers         
         self.detected_clusters_sub = rospy.Subscriber('detected_leg_clusters', LegArray, self.detected_clusters_callback)      
@@ -607,11 +608,6 @@ class KalmanMultiTracker:
         """
         Publish markers of tracked people to Rviz and to <people_tracked> topic
         """        
-        people_tracked_msg = PersonArray()
-        people_tracked_msg.header.stamp = now
-        people_tracked_msg.header.frame_id = self.publish_people_frame        
-        marker_id = 0
-
         # Make sure we can get the required transform first:
         if self.use_scan_header_stamp_for_tfs:
             tf_time = now
@@ -628,6 +624,10 @@ class KalmanMultiTracker:
         if not transform_available:
             rospy.loginfo("Person tracker: tf not avaiable. Not publishing people")
         else:
+            people_msg = People()
+            people_msg.header.stamp = now
+            people_msg.header.frame_id = self.fixed_frame
+            person_arr = []
             for person in self.objects_tracked:
                 if person.is_person == True:
                     if self.publish_occluded or person.seen_in_current_scan: # Only publish people who have been seen in current scan, unless we want to publish occluded people
@@ -637,27 +637,16 @@ class KalmanMultiTracker:
                         ps.header.stamp = tf_time
                         ps.point.x = person.pos_x
                         ps.point.y = person.pos_y
+
                         try:
                             ps = self.listener.transformPoint(self.publish_people_frame, ps)
                         except:
                             rospy.logerr("Not publishing people due to no transform from fixed_frame-->publish_people_frame")                                                
                             continue
-                        # publish to people_tracked topic
-                        new_person = Person() 
-                        new_person.pose.position.x = ps.point.x 
-                        new_person.pose.position.y = ps.point.y 
-                        yaw = math.atan2(person.vel_y, person.vel_x)
-                        quaternion = tf.transformations.quaternion_from_euler(0, 0, yaw)
-                        new_person.pose.orientation.x = quaternion[0]
-                        new_person.pose.orientation.y = quaternion[1]
-                        new_person.pose.orientation.z = quaternion[2]
-                        new_person.pose.orientation.w = quaternion[3] 
-                        new_person.id = person.id_num 
-                        people_tracked_msg.people.append(new_person)
 
+                        #prox_people.people 
                         # publish rviz markers       
                         # Cylinder for body
-                        print((rospy.Duration(3) - (rospy.get_rostime() - person.last_seen)).to_sec()/rospy.Duration(3).to_sec() + 0.1)
                         marker = Marker()
                         marker.header.frame_id = self.publish_people_frame
                         marker.header.stamp = now
@@ -743,6 +732,16 @@ class KalmanMultiTracker:
                         marker_id += 1                    
                         self.marker_pub.publish(marker)                
 
+                        new_person = PersonProxemic()
+                        new_person.position = ps.point
+                        new_person.velocity.x = person.vel_x
+                        new_person.velocity.y = person.vel_y
+                        new_person.velocity.z = 0
+                        new_person.reliability = 0.9 #adapt to reliability
+                        new_person.name = 'static_test_person' + str(marker_id)
+                        person_arr.append(new_person)
+            people_msg.people = person_arr
+            self.prox_people_pub.publish(people_msg)
         # Clear previously published people markers
         for m_id in range(marker_id, self.prev_person_marker_id):
             marker = Marker()
@@ -753,16 +752,9 @@ class KalmanMultiTracker:
             marker.action = marker.DELETE   
             self.marker_pub.publish(marker)
         self.prev_person_marker_id = marker_id          
-
-        # Publish people tracked message
-        self.people_tracked_pub.publish(people_tracked_msg)            
+           
 
 
 if __name__ == '__main__':
     rospy.init_node('multi_person_tracker', anonymous=True)
     kmt = KalmanMultiTracker()
-
-
-
-
-
